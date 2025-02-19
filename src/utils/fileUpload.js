@@ -1,6 +1,6 @@
 // src/utils/fileUpload.js
 import { v2 as cloudinary } from "cloudinary";
-import { Readable } from "stream";
+import streamifier from "streamifier";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -14,18 +14,18 @@ export const uploadFile = async (file) => {
   try {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "app-uploads" },
+        {
+          folder: "app-uploads",
+          resource_type: "auto",
+        },
         (error, result) => {
           if (error) return reject(error);
           resolve(result.secure_url);
         }
       );
 
-      // Convert buffer to stream
-      const bufferStream = new Readable();
-      bufferStream.push(file.buffer);
-      bufferStream.push(null);
-      bufferStream.pipe(uploadStream);
+      // Stream the buffer to Cloudinary
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
     });
   } catch (error) {
     throw new Error(`Error uploading file: ${error.message}`);
@@ -35,12 +35,19 @@ export const uploadFile = async (file) => {
 // Delete file from Cloudinary
 export const deleteFile = async (fileUrl) => {
   try {
-    // Extract public ID from Cloudinary URL
-    const publicId = fileUrl.split("/").slice(-1)[0].split(".")[0];
+    if (!fileUrl || !fileUrl.includes("cloudinary")) {
+      return true; // Skip if not a Cloudinary URL
+    }
 
-    await cloudinary.uploader.destroy(`app-uploads/${publicId}`);
+    // Extract public ID from Cloudinary URL
+    const urlParts = fileUrl.split("/");
+    const publicIdWithExtension = urlParts[urlParts.length - 1];
+    const publicId = `app-uploads/${publicIdWithExtension.split(".")[0]}`;
+
+    await cloudinary.uploader.destroy(publicId);
     return true;
   } catch (error) {
-    throw new Error(`Error deleting file: ${error.message}`);
+    console.error("Error deleting file:", error);
+    return false; // Don't throw error on delete failure
   }
 };

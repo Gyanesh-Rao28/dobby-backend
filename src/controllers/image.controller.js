@@ -28,7 +28,7 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-    // Upload file to storage
+    // Upload file to Cloudinary
     const fileUrl = await uploadFile(req.file);
 
     // Create image document
