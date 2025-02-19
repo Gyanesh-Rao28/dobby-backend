@@ -1,31 +1,44 @@
-import fs from "fs";
-import path from "path";
-import { promisify } from "util";
+// src/utils/fileUpload.js
+import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
 
-const unlinkAsync = promisify(fs.unlink);
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Function to upload file to local storage (in real-world, you'd use a cloud storage service)
+// Upload file to Cloudinary
 export const uploadFile = async (file) => {
   try {
-    // In production, you'd upload to cloud storage here
-    // For now, we'll just return the local path
-    return `/uploads/${file.filename}`;
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: "app-uploads" },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result.secure_url);
+        }
+      );
+
+      // Convert buffer to stream
+      const bufferStream = new Readable();
+      bufferStream.push(file.buffer);
+      bufferStream.push(null);
+      bufferStream.pipe(uploadStream);
+    });
   } catch (error) {
     throw new Error(`Error uploading file: ${error.message}`);
   }
 };
 
-// Function to delete file from storage
+// Delete file from Cloudinary
 export const deleteFile = async (fileUrl) => {
   try {
-    // Extract filename from URL
-    const filename = path.basename(fileUrl);
-    const filePath = `uploads/${filename}`;
+    // Extract public ID from Cloudinary URL
+    const publicId = fileUrl.split("/").slice(-1)[0].split(".")[0];
 
-    // Check if file exists
-    if (fs.existsSync(filePath)) {
-      await unlinkAsync(filePath);
-    }
+    await cloudinary.uploader.destroy(`app-uploads/${publicId}`);
     return true;
   } catch (error) {
     throw new Error(`Error deleting file: ${error.message}`);
