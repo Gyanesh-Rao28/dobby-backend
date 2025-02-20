@@ -16,7 +16,7 @@ const router = express.Router();
 router.use(authJWT);
 
 router.get("/search", searchImages);
-// Route for uploading image - using multer middleware
+
 router.post("/", upload.single("image"), uploadImage);
 router.get("/:imageId", getImage);
 router.delete("/:imageId", deleteImage);

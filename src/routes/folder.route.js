@@ -11,7 +11,7 @@ import { authJWT } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// All routes require authentication
+
 router.use(authJWT);
 
 router.post("/", createFolder);
