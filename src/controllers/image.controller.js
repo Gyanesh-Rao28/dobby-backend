@@ -15,7 +15,7 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-    // Check if folder exists and user has access
+    // Validate folder exists and user has access
     const folder = await Folder.findOne({
       _id: folderId,
       userId,
@@ -28,8 +28,17 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-    // Upload file to Cloudinary
-    const fileUrl = await uploadFile(req.file);
+    // Upload file to cloud storage
+    let fileUrl;
+    
+    try {
+      fileUrl = await uploadFile(req.file);
+    } catch (uploadError) {
+      return res.status(500).json({
+        success: false,
+        message: `File upload failed: ${uploadError.message}`,
+      });
+    }
 
     // Create image document
     const image = await Image.create({
@@ -47,6 +56,7 @@ export const uploadImage = async (req, res) => {
       message: "Image uploaded successfully",
     });
   } catch (error) {
+    console.error("Upload error:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Error uploading image",
@@ -100,8 +110,13 @@ export const deleteImage = async (req, res) => {
       });
     }
 
-    // Delete file from storage
-    await deleteFile(image.url);
+    // Delete file from cloud storage
+    try {
+      await deleteFile(image.url);
+    } catch (deleteError) {
+      console.error("File deletion error:", deleteError);
+      // Continue with database deletion even if file deletion fails
+    }
 
     // Delete image document
     await image.deleteOne();
@@ -111,6 +126,7 @@ export const deleteImage = async (req, res) => {
       message: "Image deleted successfully",
     });
   } catch (error) {
+    console.error("Image deletion error:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Error deleting image",

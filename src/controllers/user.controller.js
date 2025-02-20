@@ -13,11 +13,7 @@ export const registerUser = async (req, res) => {
     const {
       username,
       email,
-      password,
-      fullName,
-      gender,
-      dateOfBirth,
-      country,
+      password
     } = req.body;
 
     // Check if user already exists
@@ -36,11 +32,7 @@ export const registerUser = async (req, res) => {
     const user = await User.create({
       username,
       email,
-      password,
-      fullName,
-      gender,
-      dateOfBirth,
-      country,
+      password
     });
 
     const createdUser = await User.findById(user._id).select("-password");
