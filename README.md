@@ -1,4 +1,4 @@
-# ImageVault API
+# DobbyAds API
 
 A RESTful API for image management with nested folders built with Node.js, Express, and MongoDB.
 
@@ -33,8 +33,8 @@ A RESTful API for image management with nested folders built with Node.js, Expre
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/image-vault.git
-   cd image-vault
+   git clone https://github.com/yourusername/image-vault.git DobbyAds
+   cd DobbyAds
    ```
 
 2. Install dependencies
