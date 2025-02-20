@@ -5,6 +5,7 @@ import {
   deleteFolder,
   updateFolder,
   getRootFolders,
+  getFolderPath,
 } from "../controllers/folder.controller.js";
 import { authJWT } from "../middlewares/auth.middleware.js";
 
@@ -19,5 +20,6 @@ router.delete("/:folderId", deleteFolder);
 
 router.get("/root", getRootFolders);
 router.get("/:folderId", getFolderContent);
+router.get("/:folderId/path", getFolderPath);
 
 export default router;

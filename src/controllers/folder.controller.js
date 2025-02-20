@@ -202,3 +202,52 @@ export const updateFolder = async (req, res) => {
     });
   }
 };
+
+export const getFolderPath = async (req, res) => {
+  try {
+    const { folderId } = req.params;
+    const userId = req.user._id;
+
+    // Get the requested folder
+    const folder = await Folder.findOne({
+      _id: folderId,
+      userId,
+    });
+
+    if (!folder) {
+      return res.status(404).json({
+        success: false,
+        message: "Folder not found",
+      });
+    }
+
+    // Start with the current folder's path array
+    let pathIds = [...folder.path];
+    if (!pathIds.includes(folder._id)) {
+      pathIds.push(folder._id);
+    }
+
+    // Find all folders in the path
+    const pathFolders = await Folder.find({
+      _id: { $in: pathIds },
+      userId,
+    }).select("_id name");
+
+    // Sort folders according to path order
+    const path = pathIds
+      .map((id) =>
+        pathFolders.find((folder) => folder._id.toString() === id.toString())
+      )
+      .filter(Boolean);
+
+    return res.status(200).json({
+      success: true,
+      path,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Error retrieving folder path",
+    });
+  }
+};
